@@ -1,10 +1,17 @@
 (function () {
     const translations = {
         // common
-        "网易云音乐": "Netease Music",
-        "酷我音乐": "Kuwo Music",
-        "JOOX音乐": "JOOX Music",
-        "哔哩哔哩": "Bilibili",
+        "网易云音乐":   "Netease Music",
+        "QQ音乐":       "Tencent Music",
+        "酷我音乐":     "Kuwo Music",
+        "Tidal":        "Tidal",
+        "Qobuz":        "Qobuz",
+        "JOOX音乐":     "JOOX Music",
+        "哔哩哔哩":     "Bilibili",
+        "Apple Music":  "Apple Music",
+        "YouTube Music":"YouTube Music",
+        "Spotify":      "Spotify"
+        "Spotify":      "Spotify"
         "极高音质": "High Quality",
         "标准音质": "Standard Quality",
         "高品音质": "High Quality",
