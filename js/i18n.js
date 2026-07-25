@@ -2,10 +2,10 @@
     const translations = {
         // common
         "网易云音乐": "Netease Music",
-        "QQ音乐": "Tencent Music",
         "酷我音乐": "Kuwo Music",
         "JOOX音乐": "JOOX Music",
         "哔哩哔哩": "Bilibili",
+        "QQ音乐": "Tencent Music",
         "Apple Music": "Apple Music",
         "YouTube Music": "YouTube Music",
         "Spotify": "Spotify"
