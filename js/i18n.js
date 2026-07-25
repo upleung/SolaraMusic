@@ -1,23 +1,22 @@
 (function () {
     const translations = {
         // common
-        "网易云音乐":   "Netease Music",
-        "QQ音乐":       "Tencent Music",
-        "酷我音乐":     "Kuwo Music",
-        "Tidal":        "Tidal",
-        "Qobuz":        "Qobuz",
-        "JOOX音乐":     "JOOX Music",
-        "哔哩哔哩":     "Bilibili",
-        "Apple Music":  "Apple Music",
-        "YouTube Music":"YouTube Music",
-        "Spotify":      "Spotify"
-        "Spotify":      "Spotify"
+        "网易云音乐": "Netease Music",
+        "QQ音乐": "Tencent Music",
+        "酷我音乐": "Kuwo Music",
+        "JOOX音乐": "JOOX Music",
+        "哔哩哔哩": "Bilibili",
+        "Apple Music": "Apple Music",
+        "YouTube Music": "YouTube Music",
+        "Spotify": "Spotify"
+        "Tidal": "Tidal",
+        "Qobuz": "Qobuz",
         "极高音质": "High Quality",
         "标准音质": "Standard Quality",
         "高品音质": "High Quality",
         "无损音质": "Lossless",
         "歌词将在此处同步显示": "Lyrics will be displayed here synchronously",
-        "Made by Wet Dream Boy，免费API来自GD音乐台(music.gdstudio.xyz)，仅供学习交流使用，请支持正版音乐奥！": "Made by Wet Dream Boy. Free API from GD Music (music.gdstudio.xyz). For educational purposes only, please support official releases!",
+        "Power by GD Studio's Online Music Platform API": "Free API from GD Music (music.gdstudio.xyz). For educational purposes only, please support official releases!",
 
         // index.html
         "探索雷达": "Explore Radar",
@@ -118,14 +117,14 @@
                         }
                     }
                 });
-                
+
                 if (node.tagName === 'TITLE') {
                     const titleText = node.textContent.trim();
                     if (titleText && window.t(titleText) !== titleText) {
                         node.textContent = window.t(titleText);
                     }
                 }
-                
+
                 node.childNodes.forEach(translateNode);
             }
         };

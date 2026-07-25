@@ -649,15 +649,15 @@ function buildAudioProxyUrl(url) {
 
 const SOURCE_OPTIONS = [
     { value: "netease", label: "网易云音乐" },
-    { value: "tencent", label: "QQ音乐" },
     { value: "kuwo", label: "酷我音乐" },
-    { value: "tidal", label: "Tidal" },
-    { value: "qobuz", label: "Qobuz" },
     { value: "joox", label: "JOOX音乐" },
+    { value: "tencent", label: "QQ音乐" },
     { value: "bilibili", label: "哔哩哔哩" },
     { value: "apple", label: "Apple Music" },
     { value: "ytmusic", label: "YouTube Music" },
     { value: "spotify", label: "Spotify" }
+    { value: "tidal", label: "Tidal" },
+    { value: "qobuz", label: "Qobuz" },
 ];
 
 function normalizeSource(value) {
@@ -987,11 +987,11 @@ function validateStateConsistency() {
         state.currentTrackIndex = -1;
         state.currentAudioUrl = null;
         state.currentPlaybackTime = 0;
-        
+
         // 更新本地持久化
         safeRemoveLocalStorage("currentSong", { skipRemote: true });
         safeSetLocalStorage("currentTrackIndex", "-1", { skipRemote: true });
-        
+
         // 更新 UI (如果 DOM 已加载)
         if (dom.currentSongTitle) dom.currentSongTitle.textContent = "选择一首歌曲开始播放";
         if (dom.currentSongArtist) dom.currentSongArtist.textContent = "未知艺术家";
@@ -1299,7 +1299,7 @@ bootstrapPersistentStorage();
             { src: base, sizes: '256x256', type },
             { src: base, sizes: '192x192', type },
             { src: base, sizes: '128x128', type },
-            { src: base, sizes: '96x96',  type }
+            { src: base, sizes: '96x96', type }
         ];
     }
 
@@ -1321,7 +1321,7 @@ bootstrapPersistentStorage();
             // 某些旧 iOS 可能对 artwork 尺寸挑剔，失败时用最小配置重试
             try {
                 navigator.mediaSession.metadata = new MediaMetadata({ title, artist });
-            } catch (_) {}
+            } catch (_) { }
         }
     }
 
@@ -1396,12 +1396,12 @@ bootstrapPersistentStorage();
             } else {
                 try {
                     navigator.mediaSession.setActionHandler('seekto', null);
-                } catch (_) {}
+                } catch (_) { }
             }
 
             // 可选：切换播放状态（大部分系统自己会处理）
             navigator.mediaSession.setActionHandler('play', async () => {
-                try { await audio.play(); } catch(_) {}
+                try { await audio.play(); } catch (_) { }
             });
             navigator.mediaSession.setActionHandler('pause', () => audio.pause());
         } catch (_) {
@@ -1628,7 +1628,7 @@ function captureThemeDefaults() {
     const oldBg = document.documentElement.style.getPropertyValue("--bg-gradient");
     const oldPrimary = document.documentElement.style.getPropertyValue("--primary-color");
     const oldPrimaryDark = document.documentElement.style.getPropertyValue("--primary-color-dark");
-    
+
     document.documentElement.style.removeProperty("--bg-gradient");
     document.documentElement.style.removeProperty("--primary-color");
     document.documentElement.style.removeProperty("--primary-color-dark");
@@ -2131,21 +2131,21 @@ async function extractPaletteFromCanvas(imageUrl) {
             try {
                 const canvas = document.createElement("canvas");
                 const ctx = canvas.getContext("2d");
-                
+
                 const maxSide = Math.max(img.width, img.height);
                 const scale = PALETTE_MAX_DIMENSION / maxSide;
                 const w = Math.max(1, Math.round(img.width * scale));
                 const h = Math.max(1, Math.round(img.height * scale));
-                
+
                 canvas.width = w;
                 canvas.height = h;
                 ctx.drawImage(img, 0, 0, w, h);
-                
+
                 const imageData = ctx.getImageData(0, 0, w, h);
                 const analyzed = analyzeImageDataColors(imageData);
                 const palette = buildPaletteFromAccent(analyzed.accent, analyzed.average);
                 palette.source = imageUrl;
-                
+
                 resolve(palette);
             } catch (err) {
                 reject(err);
@@ -3754,10 +3754,10 @@ function setupInteractions() {
         debugLog(`点击事件触发: ${e.target.tagName} ${e.target.className} ${e.target.id}`);
 
         // 检查多种可能的目标元素
-        const loadMoreBtn = e.target.closest(".load-more-btn") || 
-                           e.target.closest("#loadMoreBtn") ||
-                           (e.target.id === "loadMoreBtn" ? e.target : null) ||
-                           (e.target.classList.contains("load-more-btn") ? e.target : null);
+        const loadMoreBtn = e.target.closest(".load-more-btn") ||
+            e.target.closest("#loadMoreBtn") ||
+            (e.target.id === "loadMoreBtn" ? e.target : null) ||
+            (e.target.classList.contains("load-more-btn") ? e.target : null);
 
         if (loadMoreBtn) {
             debugLog("检测到加载更多按钮点击");
@@ -5949,7 +5949,7 @@ async function playOnlineSong(index) {
         updatePlayModeUI();
         renderPlaylist();
         updatePlaylistActionStates();
-        
+
         // 可选：如果希望继续高亮“探索雷达”中的项，保留对 updateOnlineHighlight 的调用
         // updateOnlineHighlight();
     } catch (error) {
@@ -5991,7 +5991,7 @@ function pickRandomExploreGenre() {
     const genres = (state.radarSettings && state.radarSettings.genres && state.radarSettings.genres.length > 0)
         ? state.radarSettings.genres
         : EXPLORE_RADAR_GENRES;
-    
+
     const index = Math.floor(Math.random() * genres.length);
     return genres[index];
 }
@@ -6395,7 +6395,7 @@ function initSettings() {
     if (dom.logo) {
         dom.logo.addEventListener("dblclick", openSettingsModal);
     }
-    
+
     // 移动端双击标题或图标打开设置 (优化移动端双击兼容性)
     let lastToolbarClick = 0;
     const handleDoubleTap = (e) => {
@@ -6435,7 +6435,7 @@ function initSettings() {
 
 function renderGenreList() {
     if (!dom.radarGenreList) return;
-    
+
     dom.radarGenreList.innerHTML = EXPLORE_RADAR_GENRES.map(genre => `
         <div class="genre-item">
             <input type="checkbox" id="genre-${genre}" value="${genre}" checked>
@@ -6460,7 +6460,7 @@ function closeSettingsModal() {
 
 async function saveSettings() {
     const selectedGenres = Array.from(dom.radarGenreList.querySelectorAll("input:checked")).map(cb => cb.value);
-    
+
     if (selectedGenres.length === 0) {
         showNotification("请至少选择一个风格", "warning");
         return;
@@ -6500,7 +6500,7 @@ async function loadSettings() {
 
 function applySettingsToUI() {
     if (!state.radarSettings || !state.radarSettings.genres || !dom.radarGenreList) return;
-    
+
     const checkboxes = dom.radarGenreList.querySelectorAll("input[type='checkbox']");
     checkboxes.forEach(cb => {
         cb.checked = state.radarSettings.genres.includes(cb.value);
@@ -6508,9 +6508,9 @@ function applySettingsToUI() {
 }
 
 // 在 bootstrapPersistentStorage 之后或期间初始化设置
-(function() {
+(function () {
     const originalBootstrap = bootstrapPersistentStorage;
-    bootstrapPersistentStorage = async function() {
+    bootstrapPersistentStorage = async function () {
         await originalBootstrap();
         initSettings();
     };
