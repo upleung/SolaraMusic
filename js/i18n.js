@@ -8,7 +8,7 @@
         "QQ音乐": "Tencent Music",
         "Apple Music": "Apple Music",
         "YouTube Music": "YouTube Music",
-        "Spotify": "Spotify"
+        "Spotify": "Spotify",
         "Tidal": "Tidal",
         "Qobuz": "Qobuz",
         "极高音质": "High Quality",
