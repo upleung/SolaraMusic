@@ -5,6 +5,12 @@
         "酷我音乐": "Kuwo Music",
         "JOOX音乐": "JOOX Music",
         "哔哩哔哩": "Bilibili",
+        "QQ音乐": "Tencent Music",
+        "Apple Music": "Apple Music",
+        "YouTube Music": "YouTube Music",
+        "Spotify": "Spotify"
+        "Tidal": "Tidal",
+        "Qobuz": "Qobuz",
         "极高音质": "High Quality",
         "标准音质": "Standard Quality",
         "高品音质": "High Quality",
