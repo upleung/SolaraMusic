@@ -103,10 +103,3 @@ html.desktop-view .search-results-list {
 html.desktop-view .search-results {
     gap: 0;
 }
-
-.header-note {
-    color: rgba(255, 255, 255, 0.6); /* 透明灰白色 */
-    font-size: 16px;
-    font-weight: normal;
-    margin-top: 5px;
-}
