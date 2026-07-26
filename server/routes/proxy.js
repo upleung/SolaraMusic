@@ -1,13 +1,3 @@
-/**
- * 代理接口 —— 移植自 functions/proxy.ts
- * GET /proxy
- *
- * 核心缓存逻辑与 Cloudflare 版完全一致：
- *   - Cache HIT  → 直接返回缓存内容，不请求上游
- *   - Cache MISS → 请求上游，成功后写入本地内存缓存（5 分钟 TTL）
- *   - 搜索结果为空 / 包含错误 → 不缓存
- */
-
 const { Router } = require('express');
 const cache = require('../cache');
 
@@ -24,14 +14,12 @@ function isAllowedKuwoHost(hostname) {
 }
 
 function buildCacheKey(url) {
-  // 过滤随机防缓存签名 s 以及 nocache 参数，以便重试成功后能更新同一个缓存项
   const u = new URL(url);
   u.searchParams.delete('s');
   u.searchParams.delete('nocache');
   return u.toString();
 }
 
-/** 代理酷我音频流（带 Range 支持） */
 async function proxyKuwoAudio(targetUrl, req, res) {
   let parsed;
   try {
@@ -55,9 +43,7 @@ async function proxyKuwoAudio(targetUrl, req, res) {
   if (req.headers['range']) headers['Range'] = req.headers['range'];
 
   const controller = new AbortController();
-  req.on('close', () => {
-    controller.abort();
-  });
+  req.on('close', () => controller.abort());
 
   try {
     const upstream = await fetch(parsed.toString(), {
@@ -65,8 +51,8 @@ async function proxyKuwoAudio(targetUrl, req, res) {
       headers,
       signal: controller.signal
     });
-    res.status(upstream.status);
 
+    res.status(upstream.status);
     for (const h of SAFE_RESPONSE_HEADERS) {
       const v = upstream.headers.get(h);
       if (v) res.setHeader(h, v);
@@ -77,26 +63,20 @@ async function proxyKuwoAudio(targetUrl, req, res) {
     const { Readable } = require('node:stream');
     return Readable.fromWeb(upstream.body).pipe(res);
   } catch (err) {
-    if (err.name === 'AbortError') {
-      console.log('[Proxy Kuwo] Request aborted by client');
-      return;
-    }
+    if (err.name === 'AbortError') return;
     console.error('[Proxy Kuwo]', err);
     return res.status(502).send('Upstream error');
   }
 }
 
-/** 代理 music API 请求，带本地缓存 */
 async function proxyApiRequest(reqUrl, req, res) {
   const cacheKey = buildCacheKey(reqUrl);
   const parsedReq = new URL(reqUrl);
   const bypassCache = parsedReq.searchParams.get('nocache') === 'true';
 
-  // ── Cache HIT ──────────────────────────────────────────────────────────────
   if (!bypassCache) {
     const cached = cache.get(cacheKey);
     if (cached) {
-      console.log(`[Cache HIT] ${reqUrl}`);
       res.setHeader('Content-Type', cached.contentType || 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('X-Cache-Status', 'HIT');
@@ -105,75 +85,51 @@ async function proxyApiRequest(reqUrl, req, res) {
     }
   }
 
-  // ── Cache MISS：请求上游 ────────────────────────────────────────────────────
   console.log(`[Cache MISS] Fetching from upstream: ${reqUrl}`);
+
+  const apiUrl = new URL(API_BASE_URL);
+
+  // ⭐⭐ 关键修复点：手动写入 source 参数 ⭐⭐
+  const source = parsedReq.searchParams.get("source") || "netease";
+  apiUrl.searchParams.set("source", source);
+
+  // 复制其他参数
+  parsedReq.searchParams.forEach((value, key) => {
+    if (['target', 'callback', 's', 'nocache', 'source'].includes(key)) return;
+    apiUrl.searchParams.set(key, value);
+  });
+
+  if (!apiUrl.searchParams.has('types')) {
+    return res.status(400).send('Missing types');
+  }
 
   let upstream;
   let responseText;
   let contentType;
 
-  if (process.env.WRANGLER_API_URL) {
-    // 转发给内部 Wrangler，利用其 BoringSSL 绕过 Cloudflare 验证
-    const wranglerUrl = new URL(process.env.WRANGLER_API_URL + '/proxy');
-    parsedReq.searchParams.forEach((value, key) => {
-      if (key === 'target' || key === 'callback' || key === 's' || key === 'nocache') return;
-      wranglerUrl.searchParams.set(key, value);
+  try {
+    upstream = await fetch(apiUrl.toString(), {
+      headers: {
+        'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
+        'Accept': 'application/json',
+      },
     });
-
-    try {
-      upstream = await fetch(wranglerUrl.toString(), {
-        headers: {
-          'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
-          'Accept': 'application/json',
-          'Referer': 'https://music.gdstudio.xyz/',
-          'Origin': 'https://music.gdstudio.xyz'
-        },
-      });
-      responseText = await upstream.text();
-      contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-    } catch (err) {
-      console.error('[Proxy API via Wrangler fetch]', err);
-      return res.status(502).send('Upstream proxy error');
-    }
-  } else {
-    // 原逻辑，未配置 WRANGLER_API_URL 时直接 fetch API_BASE_URL
-    const apiUrl = new URL(API_BASE_URL);
-    parsedReq.searchParams.forEach((value, key) => {
-      if (key === 'target' || key === 'callback' || key === 's' || key === 'nocache') return;
-      apiUrl.searchParams.set(key, value);
-    });
-
-    if (!apiUrl.searchParams.has('types')) {
-      return res.status(400).send('Missing types');
-    }
-
-    try {
-      upstream = await fetch(apiUrl.toString(), {
-        headers: {
-          'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
-          'Accept': 'application/json',
-          'Referer': 'https://music.gdstudio.xyz/',
-          'Origin': 'https://music.gdstudio.xyz'
-        },
-      });
-      responseText = await upstream.text();
-      contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-    } catch (err) {
-      console.error('[Proxy API fetch]', err);
-      return res.status(502).send('Upstream error');
-    }
+    responseText = await upstream.text();
+    contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+  } catch (err) {
+    console.error('[Proxy API fetch]', err);
+    return res.status(502).send('Upstream error');
   }
 
-  // ── 判断是否缓存（与 Cloudflare 版本逻辑完全一致） ──────────────────────────
   const isSearch = parsedReq.searchParams.get('types') === 'search';
-  const isEmptyResult = responseText.trim() === '[]';
+  const isEmpty = responseText.trim() === '[]';
   const isError = responseText.includes('"error"') || responseText.includes('"status":0');
 
   let shouldCache = upstream.status === 200 && !isError && !bypassCache;
-  if (isSearch && isEmptyResult) shouldCache = false;
+  if (isSearch && isEmpty) shouldCache = false;
 
   if (shouldCache) {
-    cache.set(cacheKey, { body: responseText, contentType }, 300); // 缓存 5 分钟
+    cache.set(cacheKey, { body: responseText, contentType }, 300);
     console.log(`[Cache PUT] Saved to cache: ${reqUrl}`);
   }
 
@@ -207,7 +163,6 @@ module.exports = function createProxyRouter() {
       return proxyKuwoAudio(target, req, res);
     }
 
-    // 重建完整 URL（含查询参数）给缓存 key 使用
     const fullUrl = `http://localhost${req.originalUrl}`;
     return proxyApiRequest(fullUrl, req, res);
   });
