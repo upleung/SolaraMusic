@@ -20,6 +20,39 @@ function buildCacheKey(url) {
   return u.toString();
 }
 
+/**
+ * 核心修复点：规范化 source 参数
+ * 将前端传来的 source 智能映射到第三方 API 支持的规范参数
+ * 支持 API 文档中规定的 netease、tencent、kuwo、tidal、qobuz、joox、bilibili、apple、ytmusic、spotify
+ * 同时保留对于 "_album" 的高级用法支持。
+ */
+function normalizeSource(rawSource) {
+  if (!rawSource) return 'netease';
+  
+  let s = String(rawSource).toLowerCase().trim();
+  let suffix = '';
+  
+  // 保留获取专辑时的 _album 后缀
+  if (s.endsWith('_album')) {
+    suffix = '_album';
+    s = s.replace('_album', '');
+  }
+
+  // 映射字典，支持模糊匹配与准确转换
+  if (s.includes('qq') || s === 'tencent') s = 'tencent';
+  else if (s.includes('youtube') || s === 'ytmusic' || s === 'yt') s = 'ytmusic';
+  else if (s.includes('apple')) s = 'apple';
+  else if (s.includes('bilibili') || s === 'b站') s = 'bilibili';
+  else if (s.includes('spotify')) s = 'spotify';
+  else if (s.includes('tidal')) s = 'tidal';
+  else if (s.includes('qobuz')) s = 'qobuz';
+  else if (s.includes('kuwo')) s = 'kuwo';
+  else if (s.includes('joox')) s = 'joox';
+  else if (s.includes('netease') || s.includes('网易')) s = 'netease';
+
+  return s + suffix;
+}
+
 async function proxyKuwoAudio(targetUrl, req, res) {
   let parsed;
   try {
@@ -89,11 +122,12 @@ async function proxyApiRequest(reqUrl, req, res) {
 
   const apiUrl = new URL(API_BASE_URL);
 
-  // ⭐⭐ 关键修复点：手动写入 source 参数 ⭐⭐
-  const source = parsedReq.searchParams.get("source") || "netease";
-  apiUrl.searchParams.set("source", source);
+  // ⭐⭐ 应用修复：解析并规范化 source 参数后写入 API URL ⭐⭐
+  const rawSource = parsedReq.searchParams.get("source");
+  const normalizedSource = normalizeSource(rawSource);
+  apiUrl.searchParams.set("source", normalizedSource);
 
-  // 复制其他参数
+  // 复制其他参数，透传给上游 API
   parsedReq.searchParams.forEach((value, key) => {
     if (['target', 'callback', 's', 'nocache', 'source'].includes(key)) return;
     apiUrl.searchParams.set(key, value);
@@ -163,6 +197,7 @@ module.exports = function createProxyRouter() {
       return proxyKuwoAudio(target, req, res);
     }
 
+    // 构建完整请求 URL，保留原始参数用于代理逻辑
     const fullUrl = `http://localhost${req.originalUrl}`;
     return proxyApiRequest(fullUrl, req, res);
   });
