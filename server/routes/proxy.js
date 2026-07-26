@@ -125,6 +125,8 @@ async function proxyApiRequest(reqUrl, req, res) {
         headers: {
           'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
           'Accept': 'application/json',
+          'Referer': 'https://music.gdstudio.xyz/',
+          'Origin': 'https://music.gdstudio.xyz'
         },
       });
       responseText = await upstream.text();
@@ -150,6 +152,8 @@ async function proxyApiRequest(reqUrl, req, res) {
         headers: {
           'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
           'Accept': 'application/json',
+          'Referer': 'https://music.gdstudio.xyz/',
+          'Origin': 'https://music.gdstudio.xyz'
         },
       });
       responseText = await upstream.text();
