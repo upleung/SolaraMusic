@@ -127,11 +127,23 @@ async function proxyApiRequest(url: URL, request: Request, waitUntil?: (promise:
     return new Response("Missing types", { status: 400 });
   }
 
+  // 获取真实客户端 IP，传递给上游防止触发风控 (可选优化)
+  const clientIp = request.headers.get("CF-Connecting-IP");
+  const fetchHeaders: Record<string, string> = {
+    "User-Agent": request.headers.get("User-Agent") ?? "Mozilla/5.0",
+    "Accept": "application/json",
+    // 核心修复：伪装成官方前端以绕过 API 高级音源防盗链拦截
+    "Referer": "https://music.gdstudio.xyz/",
+    "Origin": "https://music.gdstudio.xyz",
+    "X-Requested-With": "XMLHttpRequest"
+  };
+
+  if (clientIp) {
+    fetchHeaders["X-Forwarded-For"] = clientIp;
+  }
+
   const upstream = await fetch(apiUrl.toString(), {
-    headers: {
-      "User-Agent": request.headers.get("User-Agent") ?? "Mozilla/5.0",
-      "Accept": "application/json",
-    },
+    headers: fetchHeaders,
   });
 
   const responseText = await upstream.text();
