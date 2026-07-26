@@ -16,7 +16,7 @@
         "高品音质": "High Quality",
         "无损音质": "Lossless",
         "歌词将在此处同步显示": "Lyrics will be displayed here synchronously",
-        "Power by GD Studio's Online Music Platform API": "Power by GD Studio's Online Music Platform API",
+        "🎵🎧💎": "🎵🎧💎",
 
         // index.html
         "探索雷达": "Explore Radar",
