@@ -2421,8 +2421,3 @@ input[type="range"]:active::-moz-range-thumb {
     font-weight: normal;
     margin-top: 5px;
 }
-
-.header-note a {
-    color: inherit;
-    text-decoration: none;
-}
