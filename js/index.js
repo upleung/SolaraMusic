@@ -655,7 +655,7 @@ const SOURCE_OPTIONS = [
     { value: "tencent", label: "QQ音乐" },
     { value: "apple", label: "Apple Music" },
     { value: "ytmusic", label: "YouTube Music" },
-    { value: "spotify", label: "Spotify" }
+    { value: "spotify", label: "Spotify" },
     { value: "tidal", label: "Tidal" },
     { value: "qobuz", label: "Qobuz" },
 ];
